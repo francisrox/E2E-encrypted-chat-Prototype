@@ -3,7 +3,7 @@
 ## Security fixes in v2.0
 
 | Issue |fixed |
-|---|---|---|
+|---|---|
 | Login credentials  | ✅ HTTPS/TLS (all traffic encrypted) |
 | sender_uuid / receiver_uuid | ✅ AES-256-GCM encrypted tokens |
 | Two machines can communicate  | ✅ LAN via 0.0.0.0 binding + auto LAN IP cert |
