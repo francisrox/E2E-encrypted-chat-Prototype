@@ -2,7 +2,7 @@
 
 ## Security fixes in v2.0
 
-| Issue | v1.0 | v2.0 |
+| Issue |fixed |
 |---|---|---|
 | Login credentials  | ✅ HTTPS/TLS (all traffic encrypted) |
 | sender_uuid / receiver_uuid | ✅ AES-256-GCM encrypted tokens |
@@ -154,7 +154,7 @@ secure_messenger/
 
 ## Security Properties
 
-| Property | Implementation | Wireshark sees |
+| Property | Implemented | what I have Achieved |
 |---|---|---|
 | Transport | TLS 1.3 | Encrypted bytes only |
 | Credentials | TLS + Argon2id | Encrypted (TLS) + never stored plaintext |
