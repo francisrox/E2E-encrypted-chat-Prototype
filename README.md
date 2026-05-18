@@ -1,6 +1,6 @@
 # ⬡ SecureMsg  — End-to-End Encrypted Messaging System
 
-## Security fixes in v2.0
+## Security fixes 
 
 | Issue |fixed |
 |---|---|
