@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureMsg — End-to-End Encrypted Messenger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0f1117;
+    --bg3: #161b24;
+    --bg4: #1d2535;
+    --border: #1e2a3a;
+    --border2: #253044;
+    --accent: #00d4aa;
+    --accent2: #0099ff;
+    --accent3: #7c3aed;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #4a5568;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --success: #10b981;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+    --glow: 0 0 20px rgba(0, 212, 170, 0.15);
+    --glow2: 0 0 40px rgba(0, 212, 170, 0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    height: 100vh;
+    overflow: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(0,212,170,0.03) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,153,255,0.03) 0%, transparent 50%);
+  }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    gap: 0;
+  }
+
+  .auth-brand {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .auth-brand .logo-mark {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .auth-brand .tagline {
+    font-size: 0.7rem;
+    color: var(--text3);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .auth-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 400px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5), var(--glow2);
+  }
+
+  .auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 16px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .auth-tab.active {
+    color: var(--accent);
+    background: rgba(0,212,170,0.04);
+  }
+
+  .auth-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0; right: 0;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .auth-body { padding: 32px; }
+
+  .field { margin-bottom: 20px; }
+
+  .field label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.1);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--accent), #00b894);
+    border: none;
+    border-radius: 8px;
+    color: #0a0c10;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .auth-error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    color: var(--danger);
+    margin-top: 16px;
+    display: none;
+  }
+
+  /* KEY DISPLAY */
+  .key-reveal {
+    background: var(--bg3);
+    border: 1px solid var(--warn);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    display: none;
+  }
+
+  .key-reveal .warn-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--warn);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .key-reveal .key-text {
+    font-size: 0.6rem;
+    color: var(--text2);
+    word-break: break-all;
+    line-height: 1.6;
+    background: var(--bg);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .btn-copy {
+    padding: 7px 14px;
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 5px;
+    color: var(--warn);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-copy:hover { background: rgba(245,158,11,0.25); }
+
+  /* ── APP SHELL ── */
+  #app-screen {
+    display: none;
+    height: 100vh;
+    flex-direction: row;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-brand {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sidebar-user {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+
+  .sidebar-user .label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-user .username {
+    font-size: 0.9rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .sidebar-user .uuid-text {
+    font-size: 0.6rem;
+    color: var(--text3);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-wrap {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap input::placeholder { color: var(--text3); }
+
+  .users-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .users-list::-webkit-scrollbar { width: 3px; }
+  .users-list::-webkit-scrollbar-track { background: transparent; }
+  .users-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .user-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .user-item:hover { background: var(--bg3); }
+
+  .user-item.active {
+    background: rgba(0,212,170,0.06);
+    border-left-color: var(--accent);
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .user-avatar .dot {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--bg2);
+  }
+
+  .dot.online { background: var(--success); }
+  .dot.offline { background: var(--text3); }
+
+  .user-info .uname {
+    font-size: 0.82rem;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .user-info .ustatus {
+    font-size: 0.65rem;
+    color: var(--text3);
+    margin-top: 1px;
+  }
+
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-icon {
+    flex: 1;
+    padding: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-logout {
+    padding: 8px 14px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 6px;
+    color: var(--danger);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .btn-logout:hover { background: rgba(239,68,68,0.15); }
+
+  /* ── CHAT AREA ── */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .chat-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text3);
+  }
+
+  .chat-empty .icon { font-size: 3rem; opacity: 0.3; }
+
+  .chat-empty p {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .chat-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg2);
+    display: none;
+  }
+
+  .chat-header .peer-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .chat-header .peer-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .chat-header .peer-status {
+    font-size: 0.65rem;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .chat-header .enc-badge {
+    margin-left: auto;
+    padding: 4px 10px;
+    background: rgba(0,212,170,0.08);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 20px;
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .messages-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    display: none;
+  }
+
+  .messages-wrap::-webkit-scrollbar { width: 3px; }
+  .messages-wrap::-webkit-scrollbar-track { background: transparent; }
+  .messages-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .msg-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+  }
+
+  .msg-group.sent { align-items: flex-end; }
+  .msg-group.received { align-items: flex-start; }
+
+  .msg-bubble {
+    max-width: 65%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    word-break: break-word;
+    position: relative;
+  }
+
+  .msg-group.sent .msg-bubble {
+    background: linear-gradient(135deg, rgba(0,212,170,0.2), rgba(0,153,255,0.15));
+    border: 1px solid rgba(0,212,170,0.2);
+    border-bottom-right-radius: 4px;
+    color: var(--text);
+  }
+
+  .msg-group.received .msg-bubble {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+  }
+
+  .msg-meta {
+    font-size: 0.6rem;
+    color: var(--text3);
+    margin-top: 4px;
+    padding: 0 4px;
+  }
+
+  .msg-enc-tag {
+    font-size: 0.55rem;
+    color: var(--accent);
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  /* INPUT BAR */
+  .input-bar {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: none;
+    align-items: flex-end;
+    gap: 12px;
+    background: var(--bg2);
+  }
+
+  .input-bar textarea {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    outline: none;
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+
+  .input-bar textarea:focus { border-color: var(--accent); }
+  .input-bar textarea::placeholder { color: var(--text3); }
+
+  .btn-send {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), #00b894);
+    border: none;
+    border-radius: 10px;
+    color: #0a0c10;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .btn-send:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* STATUS BAR */
+  .status-bar {
+    padding: 6px 24px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    animation: pulse 2s infinite;
+  }
+
+  .status-dot.connected { background: var(--success); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+    max-width: 300px;
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  #toast.success {
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: var(--success);
+  }
+
+  #toast.error {
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: var(--danger);
+  }
+
+  #toast.info {
+    background: rgba(0,212,170,0.1);
+    border: 1px solid rgba(0,212,170,0.2);
+    color: var(--accent);
+  }
+
+  /* LOADING SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(0,212,170,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DATE DIVIDER */
+  .date-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    color: var(--text3);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+  }
+
+  .date-divider::before, .date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Avatar color palette */
+  .av-0 { background: rgba(0,212,170,0.15); color: var(--accent); }
+  .av-1 { background: rgba(0,153,255,0.15); color: var(--accent2); }
+  .av-2 { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .av-3 { background: rgba(245,158,11,0.15); color: var(--warn); }
+  .av-4 { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .av-5 { background: rgba(16,185,129,0.15); color: var(--success); }
+
+  /* Scrollbar for whole page */
+  * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH SCREEN ══ -->
+<div id="auth-screen">
+  <div class="auth-brand">
+    <div class="logo-mark">⬡ SecureMsg</div>
+    <div class="tagline">End-to-End Encrypted · Zero Knowledge Server</div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-body" id="login-form">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="your_username" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••">
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="doLogin()">
+        Login
+      </button>
+      <div class="field" style="margin-top:20px;margin-bottom:0;">
+        <label>Private Key (paste from signup)</label>
+        <input type="password" id="login-privkey" placeholder="Your private key (stored locally only)">
+      </div>
+      <div class="auth-error" id="login-error"></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="auth-body" id="signup-form" style="display:none">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="signup-username" placeholder="choose_username" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="••••••••">
+      </div>
+      <button class="btn-primary" id="signup-btn" onclick="doSignup()">
+        Create Account
+      </button>
+      <div class="auth-error" id="signup-error"></div>
+
+      <div class="key-reveal" id="key-reveal">
+        <div class="warn-label">⚠ Your Private Key — Save This Now!</div>
+        <div class="key-text" id="private-key-display"></div>
+        <button class="btn-copy" onclick="copyKey()">Copy Key</button>
+        <p style="font-size:0.62rem;color:var(--text3);margin-top:10px;line-height:1.5;">
+          This key encrypts your messages. The server never stores it. If lost, your messages cannot be decrypted.
+        </p>
+        <button class="btn-primary" style="margin-top:12px;" onclick="proceedAfterSignup()">I've saved my key — Enter App</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ══ -->
+<div id="app-screen">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">⬡ SecureMsg</div>
+      <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;">v1.0</div>
+    </div>
+
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="label">Logged in as</div>
+      <div class="username" id="display-username">—</div>
+      <div class="uuid-text" id="display-uuid">—</div>
+    </div>
+
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Search users…" oninput="searchUsers(this.value)">
+    </div>
+
+    <div class="users-list" id="users-list">
+      <div style="padding:20px;text-align:center;font-size:0.7rem;color:var(--text3);">Loading users…</div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-icon" onclick="refreshUsers()">↻ Refresh</button>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area">
+    <div class="chat-empty" id="chat-empty">
+      <div class="icon">🔐</div>
+      <p>Select a user to start encrypted chat</p>
+      <p style="font-size:0.65rem;opacity:0.5;">All messages are end-to-end encrypted</p>
+    </div>
+
+    <div class="chat-header" id="chat-header">
+      <div class="peer-avatar" id="peer-avatar"></div>
+      <div>
+        <div class="peer-name" id="peer-name">—</div>
+        <div class="peer-status" id="peer-status">—</div>
+      </div>
+      <div class="enc-badge">🔒 E2E Encrypted</div>
+    </div>
+
+    <div class="messages-wrap" id="messages-wrap"></div>
+
+    <div class="input-bar" id="input-bar">
+      <textarea id="msg-input" placeholder="Type an encrypted message…" rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="btn-send" id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+
+    <div class="status-bar" id="status-bar" style="display:none">
+      <div class="status-dot" id="ws-dot"></div>
+      <span id="ws-status">Connecting…</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Load TweetNaCl for client-side E2E crypto ──────────────────────────────
+const naclScript = document.createElement('script');
+naclScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl-fast.min.js';
+document.head.appendChild(naclScript);
+
+// ── Base64 helpers ─────────────────────────────────────────────────────────
+const b64encode = (arr) => btoa(String.fromCharCode(...arr));
+const b64decode = (str) => {
+  const bin = atob(str);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+};
+
+// ── Auto-detect URL (works with ngrok HTTPS automatically) ─────────────────
+const _proto   = window.location.protocol;           // https: when via ngrok
+const _wsProto = _proto === 'https:' ? 'wss:' : 'ws:';
+const _host    = window.location.host;               // ngrok domain with no port needed
+const API      = `${_proto}//${_host}`;
+const WSS      = `${_wsProto}//${_host}`;
+
+// ── State ──────────────────────────────────────────────────────────────────
+// currentUser = { stable_token, username, public_key, private_key }
+// selectedPeer = { stable_token, username, public_key }
+let currentUser  = null;
+let selectedPeer = null;
+let ws           = null;
+let allUsers     = [];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTH TAB SWITCH
+// ══════════════════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.auth-tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.getElementById('login-form').style.display  = tab === 'login'  ? '' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? '' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SIGNUP
+// ══════════════════════════════════════════════════════════════════════════════
+async function doSignup() {
+  const username = document.getElementById('signup-username').value.trim();
+  const email    = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const errEl    = document.getElementById('signup-error');
+  errEl.style.display = 'none';
+
+  if (!username || !email || !password) { showError(errEl, 'All fields required.'); return; }
+  if (password.length < 8) { showError(errEl, 'Password must be ≥ 8 characters.'); return; }
+
+  const btn = document.getElementById('signup-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Creating account…';
+
+  try {
+    const res  = await fetch(`${API}/signup`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ username, email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(errEl, data.detail || 'Signup failed.'); return; }
+
+    // Show private key warning
+    document.getElementById('private-key-display').textContent = data.private_key;
+    document.getElementById('key-reveal').style.display = 'block';
+    btn.style.display = 'none';
+
+    window._pendingAuth = data;   // hold until user clicks "I've saved my key"
+  } catch (e) {
+    showError(errEl, 'Cannot connect to server. Is it running?');
+  } finally {
+    btn.disabled = false;
+    if (btn.style.display !== 'none') btn.innerHTML = 'Create Account';
+  }
+}
+
+function copyKey() {
+  const key = document.getElementById('private-key-display').textContent;
+  navigator.clipboard.writeText(key).then(() => showToast('Private key copied!', 'success'));
+}
+
+function proceedAfterSignup() {
+  const d = window._pendingAuth;
+  if (!d) return;
+  currentUser = {
+    stable_token: d.stable_token,
+    username    : d.username,
+    public_key  : d.public_key,
+    private_key : d.private_key,
+  };
+  sessionStorage.setItem('sm_user', JSON.stringify(currentUser));
+  enterApp();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════════════════════════
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const privkey  = document.getElementById('login-privkey').value.trim();
+  const errEl    = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!username || !password) { showError(errEl, 'Username and password required.'); return; }
+  if (!privkey) { showError(errEl, 'Paste your private key (saved at signup).'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Authenticating…';
+
+  try {
+    const res  = await fetch(`${API}/login`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(errEl, data.detail || 'Login failed.'); return; }
+
+    currentUser = {
+      stable_token: data.stable_token,
+      username    : data.username,
+      public_key  : data.public_key,
+      private_key : privkey,
+    };
+    sessionStorage.setItem('sm_user', JSON.stringify(currentUser));
+    enterApp();
+  } catch (e) {
+    showError(errEl, 'Cannot connect to server. Is ngrok running?');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Login';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// APP ENTER / LOGOUT
+// ══════════════════════════════════════════════════════════════════════════════
+function enterApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'flex';
+  document.getElementById('display-username').textContent = currentUser.username;
+  document.getElementById('display-uuid').textContent     = currentUser.stable_token.substring(0, 20) + '…';
+  document.getElementById('status-bar').style.display = 'flex';
+  loadUsers();
+  connectWebSocket();
+}
+
+function logout() {
+  if (ws) ws.close();
+  sessionStorage.removeItem('sm_user');
+  currentUser = null; selectedPeer = null;
+  document.getElementById('app-screen').style.display  = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  // Reset chat area
+  document.getElementById('chat-empty').style.display  = 'flex';
+  document.getElementById('chat-header').style.display = 'none';
+  document.getElementById('messages-wrap').style.display = 'none';
+  document.getElementById('input-bar').style.display   = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// USERS LIST
+// ══════════════════════════════════════════════════════════════════════════════
+async function loadUsers() {
+  try {
+    const res = await fetch(`${API}/users`);
+    allUsers  = await res.json();
+    renderUsers(allUsers.filter(u => u.stable_token !== currentUser.stable_token));
+  } catch(e) { showToast('Could not load users', 'error'); }
+}
+
+function refreshUsers() { loadUsers(); showToast('Refreshed', 'info'); }
+
+function searchUsers(q) {
+  const filtered = allUsers.filter(u =>
+    u.stable_token !== currentUser.stable_token &&
+    u.username.toLowerCase().includes(q.toLowerCase())
+  );
+  renderUsers(filtered);
+}
+
+function avClass(username) {
+  let s = 0; for (const c of username) s += c.charCodeAt(0);
+  return `av-${s % 6}`;
+}
+
+function renderUsers(users) {
+  const list = document.getElementById('users-list');
+  if (!users.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;font-size:0.7rem;color:var(--text3);">No users found</div>';
+    return;
+  }
+  list.innerHTML = users.map(u => `
+    <div class="user-item ${selectedPeer?.stable_token === u.stable_token ? 'active' : ''}"
+         onclick="selectPeer('${u.stable_token}')">
+      <div class="user-avatar ${avClass(u.username)}">
+        ${u.username[0].toUpperCase()}
+        <div class="dot ${u.online ? 'online' : 'offline'}"></div>
+      </div>
+      <div class="user-info">
+        <div class="uname">${escHtml(u.username)}</div>
+        <div class="ustatus">${u.online ? '● Online' : '○ Offline'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SELECT PEER & LOAD MESSAGES
+// ══════════════════════════════════════════════════════════════════════════════
+async function selectPeer(stableToken) {
+  const user = allUsers.find(u => u.stable_token === stableToken);
+  if (!user) return;
+  selectedPeer = user;
+
+  // Sidebar highlight
+  document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.user-item').forEach(el => {
+    if (el.getAttribute('onclick')?.includes(stableToken)) el.classList.add('active');
+  });
+
+  // Show chat UI
+  document.getElementById('chat-empty').style.display    = 'none';
+  const hdr = document.getElementById('chat-header');
+  hdr.style.display = 'flex';
+
+  const ac = avClass(user.username);
+  document.getElementById('peer-avatar').className   = `peer-avatar ${ac}`;
+  document.getElementById('peer-avatar').textContent  = user.username[0].toUpperCase();
+  document.getElementById('peer-name').textContent    = user.username;
+  document.getElementById('peer-status').textContent  = user.online ? '● Online' : '○ Offline';
+
+  document.getElementById('messages-wrap').style.display = 'flex';
+  document.getElementById('input-bar').style.display     = 'flex';
+
+  await loadMessages();
+}
+
+async function loadMessages() {
+  if (!selectedPeer) return;
+  const wrap = document.getElementById('messages-wrap');
+  wrap.innerHTML = '<div style="text-align:center;font-size:0.7rem;color:var(--text3);padding:20px;"><span class="spinner"></span>Loading…</div>';
+
+  try {
+    const res  = await fetch(
+      `${API}/get-messages?my_token=${encodeURIComponent(currentUser.stable_token)}&peer_token=${encodeURIComponent(selectedPeer.stable_token)}`
+    );
+    const msgs = await res.json();
+    wrap.innerHTML = '';
+
+    if (!msgs.length) {
+      wrap.innerHTML = '<div style="text-align:center;font-size:0.7rem;color:var(--text3);padding:40px;">No messages yet. Say hello!</div>';
+      return;
+    }
+
+    let lastDate = null;
+    msgs.forEach(m => {
+      const ts      = new Date(m.timestamp);
+      const dateStr = ts.toLocaleDateString();
+      if (dateStr !== lastDate) {
+        lastDate = dateStr;
+        const div = document.createElement('div');
+        div.className   = 'date-divider';
+        div.textContent = dateStr;
+        wrap.appendChild(div);
+      }
+      wrap.appendChild(buildBubble(m.encrypted_message, m.is_mine, ts));
+    });
+    wrap.scrollTop = wrap.scrollHeight;
+  } catch(e) {
+    wrap.innerHTML = '<div style="text-align:center;font-size:0.7rem;color:var(--danger);padding:20px;">Failed to load messages</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CLIENT-SIDE NACL CRYPTO  (TweetNaCl.js)
+// Uses NaCl Box: X25519 DH + XSalsa20-Poly1305
+// Nonce (24 bytes) is prepended to ciphertext, then base64-encoded.
+// ══════════════════════════════════════════════════════════════════════════════
+function getPrivScalar(b64) {
+  const raw = b64decode(b64);
+  return raw.length === 64 ? raw.slice(0, 32) : raw;  // handle both 32 and 64-byte keys
+}
+
+function clientEncrypt(plaintext, recipientPubB64, senderPrivB64) {
+  const recipientPub = b64decode(recipientPubB64);
+  const senderPriv   = getPrivScalar(senderPrivB64);
+  const nonce        = nacl.randomBytes(nacl.box.nonceLength);   // 24 random bytes
+  const ct           = nacl.box(new TextEncoder().encode(plaintext), nonce, recipientPub, senderPriv);
+  if (!ct) throw new Error('Encryption failed');
+  const out = new Uint8Array(nonce.length + ct.length);
+  out.set(nonce); out.set(ct, nonce.length);
+  return b64encode(out);
+}
+
+function clientDecrypt(ciphertextB64, senderPubB64, recipientPrivB64) {
+  const raw           = b64decode(ciphertextB64);
+  const nonce         = raw.slice(0, nacl.box.nonceLength);
+  const ct            = raw.slice(nacl.box.nonceLength);
+  const senderPub     = b64decode(senderPubB64);
+  const recipientPriv = getPrivScalar(recipientPrivB64);
+  const decrypted     = nacl.box.open(ct, nonce, senderPub, recipientPriv);
+  if (!decrypted) throw new Error('Decryption failed — wrong key?');
+  return new TextDecoder().decode(decrypted);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SEND MESSAGE
+// ══════════════════════════════════════════════════════════════════════════════
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text  = input.value.trim();
+  if (!text || !selectedPeer) return;
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+
+  try {
+    const encrypted = clientEncrypt(text, selectedPeer.public_key, currentUser.private_key);
+
+    // 1. Persist to DB (sender/receiver travel as opaque stable_tokens)
+    const res = await fetch(`${API}/send-message`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({
+        sender_token   : currentUser.stable_token,
+        receiver_token : selectedPeer.stable_token,
+        encrypted_message: encrypted,
+      }),
+    });
+    if (!res.ok) { showToast('Send failed', 'error'); return; }
+
+    // 2. Real-time push via WebSocket
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type             : 'message',
+        sender_token     : currentUser.stable_token,
+        receiver_token   : selectedPeer.stable_token,
+        encrypted_message: encrypted,
+      }));
+    }
+
+    // 3. Optimistic UI append
+    document.getElementById('messages-wrap').appendChild(
+      buildBubble(encrypted, true, new Date())
+    );
+    document.getElementById('messages-wrap').scrollTop = 9999;
+
+    input.value       = '';
+    input.style.height = '';
+  } catch(e) {
+    showToast('Failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function buildBubble(encryptedMsg, isMine, ts) {
+  let plaintext;
+  try {
+    // For sent messages we encrypt with PEER's public key, so decrypt with PEER's pub + OUR priv
+    plaintext = clientDecrypt(encryptedMsg, selectedPeer.public_key, currentUser.private_key);
+  } catch(e) {
+    plaintext = '[Could not decrypt — key mismatch]';
+  }
+  const group = document.createElement('div');
+  group.className = `msg-group ${isMine ? 'sent' : 'received'}`;
+  group.innerHTML = `
+    <div class="msg-bubble">${escHtml(plaintext)}</div>
+    <div class="msg-meta">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+    <div class="msg-enc-tag">🔒 E2E encrypted</div>
+  `;
+  return group;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WEBSOCKET (uses WSS when accessed via ngrok HTTPS)
+// ══════════════════════════════════════════════════════════════════════════════
+function connectWebSocket() {
+  const wsUrl = `${WSS}/ws/${encodeURIComponent(currentUser.stable_token)}`;
+  ws = new WebSocket(wsUrl);
+
+  const dot    = document.getElementById('ws-dot');
+  const status = document.getElementById('ws-status');
+
+  ws.onopen = () => {
+    dot.className   = 'status-dot connected';
+    status.textContent = `Secure channel open — ${currentUser.username}`;
+    showToast('Connected — E2E encryption active', 'success');
+  };
+
+  ws.onclose = () => {
+    dot.className      = 'status-dot';
+    status.textContent = 'Reconnecting…';
+    setTimeout(connectWebSocket, 3000);
+  };
+
+  ws.onerror = () => {
+    dot.className      = 'status-dot';
+    status.textContent = 'Connection error';
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'message' && !data.is_mine) {
+      // Incoming message from someone
+      const sender = allUsers.find(u => u.stable_token === data.sender_token);
+      if (selectedPeer && sender?.stable_token === selectedPeer.stable_token) {
+        // Currently chatting with this person — show bubble
+        const wrap = document.getElementById('messages-wrap');
+        wrap.appendChild(buildBubble(data.encrypted_message, false, new Date(data.timestamp)));
+        wrap.scrollTop = 9999;
+      } else {
+        // Not in this chat — show toast notification
+        showToast(`New message from ${sender?.username || 'someone'}`, 'info');
+      }
+      // Refresh online status
+      loadUsers();
+    }
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UI UTILITIES
+// ══════════════════════════════════════════════════════════════════════════════
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function showError(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let _toastTimer;
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.className = '', 3500);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SESSION RESTORE
+// ══════════════════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('sm_user');
+  if (saved) {
+    try { currentUser = JSON.parse(saved); enterApp(); }
+    catch(e) { sessionStorage.removeItem('sm_user'); }
+  }
+});
+</script>
+</body>
+</html>

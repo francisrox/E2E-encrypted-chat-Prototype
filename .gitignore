@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Database — DO NOT commit the SQLite DB
+*.db
+*.sqlite
+
+# TLS certs and secret keys — DO NOT commit
+certs/key.pem
+certs/meta.key
+certs/lan_ip.txt
+
+# commit cert.pem so users can install the CA (optional)
+# certs/cert.pem  ← leave this uncommented to include cert
+
+# Junk folders from Linux mkdir on Windows
+{server,client,database,keys,encryption,auth,ui}/
+
+# OS files
+.DS_Store
+Thumbs.db

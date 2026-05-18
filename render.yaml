@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: securemsg
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: META_KEY
+        generateValue: false    # You paste this manually from your local certs/meta.key
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /
+    autoDeploy: true
