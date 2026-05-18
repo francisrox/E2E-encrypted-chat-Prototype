@@ -1,25 +1,15 @@
-# ⬡ SecureMsg v2.0 — End-to-End Encrypted Messaging System
+# ⬡ SecureMsg  — End-to-End Encrypted Messaging System
 
 ## Security fixes in v2.0
 
 | Issue | v1.0 | v2.0 |
 |---|---|---|
-| Login credentials visible in Wireshark | ❌ Plain HTTP | ✅ HTTPS/TLS (all traffic encrypted) |
-| sender_uuid / receiver_uuid in plain text | ❌ Exposed | ✅ AES-256-GCM encrypted tokens |
-| Two machines can't communicate | ❌ localhost only | ✅ LAN via 0.0.0.0 binding + auto LAN IP cert |
-| Messages readable by server | ❌ — | ✅ NaCl Box E2E (unchanged from v1) |
+| Login credentials  | ✅ HTTPS/TLS (all traffic encrypted) |
+| sender_uuid / receiver_uuid | ✅ AES-256-GCM encrypted tokens |
+| Two machines can communicate  | ✅ LAN via 0.0.0.0 binding + auto LAN IP cert |
 
 ---
 
-## What Wireshark sees now
-
-**Before (v1.0 — HTTP):**
-```
-POST /login HTTP/1.1
-{"username": "francis_roz", "password": "Francis@3"}   ← VISIBLE
-```
-
-**After (v2.0 — HTTPS/TLS):**
 ```
 TLSv1.3 Application Data  [Encrypted — 512 bytes]      ← ONLY THIS
 ```
